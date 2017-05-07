@@ -8,34 +8,22 @@ use std::fmt;
 
 use field::Field;
 
-#[derive(Eq, PartialEq, Hash)]
-pub struct Number {
+#[derive(Eq, PartialEq, Hash, Clone, Copy)]
+pub struct Number  {
     pub value: i64,
     pub field: Field,
 }
 
 impl Number {
-    pub fn new(value: i64, field: &Field) -> Number {
+    pub fn new(value: i64, field: Field) -> Number {
         Number {
             value, 
-            field: Field::new(field.prime),
+            field: field,
         }
     }
 
-    pub fn sum(a: i64, b: i64, field: &Field) -> Number {
-        Number::new(a, &field) + Number::new(b, &field)
-    }
-
-    pub fn dup(&self) -> Number {
-        Number::new(self.value, &self.field)
-    }
-
-    pub fn from(&self, value: i64) -> Number {
-        Number::new(value, &self.field)
-    }
-
     pub fn infinity() -> Number {
-        Number::new(i64::max_value(), &Field::new(0))
+        Number::new(i64::max_value(), Field::new(0))
     }
 
     pub fn infinite(&self) -> bool {
@@ -43,7 +31,10 @@ impl Number {
     }
 
     pub fn negative(&self) -> Number {
-        self.from(-self.value)
+		Number {
+			value: -self.value,
+			field: self.field
+		}
     }
 
 }
@@ -62,7 +53,7 @@ impl Add for Number {
 			result += prime;
 		}
 
-		Number::new(result, &self.field)
+        Number::new(result, self.field)
 	}
 }
 
@@ -79,7 +70,7 @@ impl Sub for Number {
 			result += prime;
 		}
 
-		Number::new(result, &self.field)
+		Number::new(result, self.field)
     }
 }
 
@@ -93,14 +84,14 @@ impl Mul for Number {
 
 		let mut min = cmp::min(l, r);
 		let mut max = cmp::max(l, r) as i64;
-		let mut result = Number::new(0, &self.field);
+		let mut result = Number::new(0, self.field);
 
 		while min > 0 {
 			if min & (1 << 0) == 1 {
-				result = Number::sum(result.value, max, &self.field);
+				result = Number::new(max, self.field) + result;
 			}
 
-			max = Number::sum(max, max, &self.field).value;
+			max = (Number::new(max, self.field) + Number::new(max, self.field)).value;
 			min >>= 1;
 		}
 
@@ -128,7 +119,7 @@ impl Number {
 			numeric_base = (numeric_base * numeric_base) % prime as i64;
 		}
 
-		Number::new(numeric_result, &self.field)
+		Number::new(numeric_result, self.field)
 	}
 
 }
@@ -137,9 +128,8 @@ impl Div for Number {
     type Output = Number;
 
     fn div(self, other: Number) -> Number {
-        let dup = self.dup();
-        let prime = self.field.prime - 2;
-		self * dup.pow(other, dup.from(prime as i64))
+        let prime = (self.field.prime - 2) as i64;
+		self * other.pow(other, Number::new(prime, self.field))
 	}
 }
 

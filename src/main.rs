@@ -2,6 +2,7 @@ pub mod elliptic_curve;
 pub mod field;
 pub mod point;
 pub mod number;
+pub mod helper;
 
 fn main() {
 	let prime = 29;

@@ -5,37 +5,69 @@ use std::cmp::Ordering;
 use number::Number;
 use field::Field;
 
-#[derive(Eq, PartialEq, Hash)]
+#[derive(Eq, PartialEq, Hash, Clone, Copy)]
 pub struct Point {
 	pub x: Number,
-	pub y: Number
+	pub y: Number,
+	characteristic: Number
 }
 
 impl Point {
 
-	pub fn new(x: i64, y: i64, field: &Field) -> Point {
+	pub fn new(x: i64, y: i64, characteristic: i64, field: Field) -> Point {
 		Point {
-			x: Number::new(x, &field),
-			y: Number::new(y, &field),
+			x: Number::new(x, field),
+			y: Number::new(y, field),
+			characteristic: Number::new(characteristic, field)
 		}
 	}
 
     pub fn infinity() -> Point {
         Point {
             x: Number::infinity(),
-            y: Number::infinity()
+            y: Number::infinity(),
+			characteristic: Number::infinity()
         }
     }
 
 	pub fn negative(&self) -> Point {
 		Point {
-			x: self.x.dup(),
-			y: self.y.negative()
+			x: self.x,
+			y: self.y.negative(),
+			characteristic: Number::infinity()
 		}
 	}
 
 	pub fn infinite(&self) -> bool {
 		self.x.infinite() && self.y.infinite()
+	}
+
+	pub fn double(self) -> Point {
+		let number3 = Number::new(3, self.x.field);
+		let number2 = Number::new(2, self.x.field);
+		let mut delta = (number3 * self.x.pow(self.x, number2)) + self.characteristic;
+		delta = delta / (number2 * self.y);
+
+		let x3 = delta.pow(delta, number2) - (number2 * self.x);
+		let y3 = delta * (self.x - x3) - self.y;
+
+		Point {
+			x: x3,
+			y: y3,
+			characteristic: self.characteristic
+		}
+	}
+
+	pub fn point_multiplication(point: Point, n: u64) -> Point {
+		if n == 0 {
+			return Point::infinity();
+		} else if n == 1 {
+			return point;
+		} else if n % 2 == 1 {
+			return (point + Point::point_multiplication(point, n - 1)).expect(":(");
+		} else {
+			return Point::point_multiplication(point.double(), n / 2);
+		}
 	}
 }
 
@@ -45,15 +77,19 @@ impl Add for Point {
 
 		if self == other || self == other.negative() {
 			None
+
+		} else if other.infinite() {
+			Some(self)
+
 		} else {
-            println!("{:?} + {:?}", self, other);
-            let delta = (other.y - self.y.dup()) / (other.x.dup() - self.x.dup());
-			let x3 = (delta.dup() * delta.dup()) - self.x.dup() - other.x.dup();
-			let y3 = delta * (self.x.dup() - x3.dup()) - self.y.dup();
+            let delta = (other.y - self.y) / (other.x - self.x);
+			let x3 = (delta * delta) - self.x - other.x;
+			let y3 = delta * (self.x - x3) - self.y;
 
 			Some(Point {
 				x: x3,
-				y: y3
+				y: y3,
+				characteristic: self.characteristic
 			})
 		}
 	}

@@ -1,14 +1,15 @@
 use std::collections::HashMap;
 use std::vec::Vec;
 
+use helper;
 use point::Point;
 use field::Field;
 
 pub struct EllipticCurve {
 	pub field: Field,
 	pub points: Vec<Point>,
-	a: i64,
-	b: i64
+	pub a: i64,
+	pub b: i64
 }
 
 impl EllipticCurve {
@@ -45,7 +46,7 @@ impl EllipticCurve {
 			let result = self.calculate_y(x as i64);
 			if let Some(ys) = lookup_table.get(&result) {
 				for &y in ys {
-					self.points.push(self.field.new_point(x as i64,y as i64));
+					self.points.push(self.field.new_point(x as i64,y as i64, self.a));
 				}
 			}
 			else {
@@ -60,12 +61,16 @@ impl EllipticCurve {
 		self
 	}
 
-	pub fn count(&self) -> usize {
+	pub fn order(&self) -> usize {
 		self.points.len()
 	}
 
+	pub fn is_cyclic(&self) -> bool {
+		helper::is_prime(self.order() as u64)
+	}
+
 	pub fn print(&self) {
-		println!("Found the following {} points on the curve x³ + {}x + {} over the Field F{}:", self.count(), self.a, self.b, self.field.prime);
+		println!("Found the following {} points on the curve x³ + {}x + {} over the Field F{}:", self.order(), self.a, self.b, self.field.prime);
 		println!("\n");
 
 		let mut i = 0;
