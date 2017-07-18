@@ -45,10 +45,10 @@ impl Point {
 	pub fn double(self) -> Point {
 		let number3 = Number::new(3, self.x.field);
 		let number2 = Number::new(2, self.x.field);
-		let mut delta = (number3 * self.x.pow(self.x, number2)) + self.characteristic;
+		let mut delta = (number3 * Number::pow(self.x, number2)) + self.characteristic;
 		delta = delta / (number2 * self.y);
 
-		let x3 = delta.pow(delta, number2) - (number2 * self.x);
+		let x3 = Number::pow(delta, number2) - (number2 * self.x);
 		let y3 = delta * (self.x - x3) - self.y;
 
 		Point {

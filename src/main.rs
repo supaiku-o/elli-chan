@@ -3,6 +3,7 @@ pub mod field;
 pub mod point;
 pub mod number;
 pub mod helper;
+pub mod diffie_hellman;
 
 fn main() {
 	let prime = 29;

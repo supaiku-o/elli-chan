@@ -102,8 +102,8 @@ impl Mul for Number {
 
 impl Number {
 
-	pub fn pow(&self, base: Number, exp: Number) -> Number {
-        let prime = self.field.prime;
+	pub fn pow(base: Number, exp: Number) -> Number {
+        let prime = base.field.prime;
 
         let mut numeric_result = 1;
         let mut numeric_base = base.value;
@@ -119,7 +119,7 @@ impl Number {
 			numeric_base = (numeric_base * numeric_base) % prime as i64;
 		}
 
-		Number::new(numeric_result, self.field)
+		Number::new(numeric_result, base.field)
 	}
 
 }
@@ -129,7 +129,7 @@ impl Div for Number {
 
     fn div(self, other: Number) -> Number {
         let prime = (self.field.prime - 2) as i64;
-		self * other.pow(other, Number::new(prime, self.field))
+		self * Number::pow(other, Number::new(prime, self.field))
 	}
 }
 
